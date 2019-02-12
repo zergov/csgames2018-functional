@@ -23,10 +23,19 @@ instruction ('t':'o':'g':'g':'l':'e':xs) = (Toggle, (head $ coords xs), (last $ 
 grid :: Grid
 grid = [(i, j, False) | i <- [0..1199], j <- [0..1199]]
 
+-- if( bb.ix <= p.x && p.x <= bb.ax && bb.iy <= p.y && p.y <= bb.ay ) {
+    -- // Point is in bounding box
+-- }
+-- bb is the bounding box, (ix,iy) are its top-left coordinates, and (ax,ay) its bottom-right coordinates.  p is the point and (x,y) its coordinates.
+-- https://stackoverflow.com/a/18295844
+--
+insideRect :: (Int, Int) -> (Int, Int) -> (Int, Int) -> Bool
+insideRect (x, y) (ix, iy) (ax, ay) = ix <= x && x <= ax && iy <= y && y <= ay
+
 applyInstruction :: Grid -> Instruction -> Grid
-applyInstruction g (On, a, b) = map (\(x, y, s) -> if (x,y) >= a && (x,y) <= b then (x,y,True) else (x,y,s)) g
-applyInstruction g (Off, a, b) = map (\(x, y, s) -> if (x,y) >= a && (x,y) <= b then (x,y,False) else (x,y,s)) g
-applyInstruction g (Toggle, a, b) = map (\(x, y, s) -> if (x,y) >= a && (x,y) <= b then (x,y, not s) else (x,y,s)) g
+applyInstruction g (On, a, b) = map (\(x, y, s) -> if insideRect (x, y) a b then (x,y,True) else (x,y,s)) g
+applyInstruction g (Off, a, b) = map (\(x, y, s) -> if insideRect (x, y) a b then (x,y,False) else (x,y,s)) g
+applyInstruction g (Toggle, a, b) = map (\(x, y, s) -> if insideRect (x, y) a b then (x,y, not s) else (x,y,s)) g
 
 solve :: [Instruction] -> Int
 solve = length . filter (\(_,_,s) -> s == True) . foldl applyInstruction grid
